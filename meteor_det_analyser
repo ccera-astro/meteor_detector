@@ -1,0 +1,34 @@
+#!/bin/sh
+PYTHONPATH=$PYTHONPATH:$HOME/bin
+PATH=$PATH:$HOME/bin
+bn=`basename $1 .dat`
+awk '
+BEGIN {MIN=999999; MAX=999999; ndx=0}
+/./ {if ($2 == 0) next
+     times[ndx] = $1
+     data[ndx] = $2
+     ndx = ndx + 1
+     if ($2 < MIN) MIN=$2
+     if ($2 > MAX) MAX=$2
+ }
+END {
+	  for (i = 0; i < ndx; i++)
+	  {
+		  printf ("%f %f\n", times[i], data[i]/MIN)
+	  }
+  }' <$1 >tmp$$
+ofile=${bn}_det.png
+ifile=tmp$$
+cat >gnuplot.$$ <<!EOF!
+set title "Triggered Detector Output"
+set xlabel "Local Time(hours)"
+set ylabel "Relative Power"
+set grid
+set terminal png size 1000,600
+set output '$ofile'
+plot '$ifile' with lines
+!EOF!
+gnuplot gnuplot.$$
+rm -f gnuplot.$$
+rm -f tmp$$
+echo Output file is available in $ofile

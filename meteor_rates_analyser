@@ -1,0 +1,36 @@
+#!/bin/sh
+PYTHONPATH=$PYTHONPATH:$HOME/bin
+PATH=$PATH:$HOME/bin
+bn=`basename $1 .dat`
+awk '
+/./ {if ($4 == 0) next
+     times[ndx] = $1
+     data[ndx] = $4
+     ndx = ndx + 1
+ }
+END {
+	cnt = 0;
+	  for (i = 0; i < ndx; i++)
+	  {
+		  if (cnt++ == 10)
+		  {
+			printf ("%f %f\n", times[i], data[i])
+			cnt = 0
+		}
+	  }
+  }' <$1 >tmp$$
+ofile=${bn}_rates.png
+ifile=tmp$$
+cat >gnuplot.$$ <<!EOF!
+set title "Count Rates vs Time"
+set xlabel "Local Time(hours)"
+set ylabel "Counts"
+set grid
+set terminal png size 1000,600
+set output '$ofile'
+plot '$ifile' with lines
+!EOF!
+gnuplot gnuplot.$$
+rm -f gnuplot.$$
+rm -f tmp$$
+echo Output file is available in $ofile

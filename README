@@ -1,0 +1,65 @@
+This Gnu Radio flow-graph implements a simple meteor-detector receiver intended for VHF meteor detection
+  via the forward-scatter technique.
+  
+To install, simply "make install".  This will copy the appropriate bits into $HOME/bin -- it DOES NOT
+  install in the system directories.  This flow-graph assumes that you've already installed the
+  gr-osmosdr RTL source blocks in your Gnu Radio installation.  The flow-graph can optionally be
+  reconfigured to use UHD devices--which requires that the .grc file be brought into GRC, and the
+  UHD block enabled, and the rtl-sdr block disabled.
+    
+The flow-graph has two components: meteor_detector.py and meteor_helper.py which provides data
+  recording functions.  The starter script, meteor_detector arranges to have $HOME/bin brought into
+  your search path dynamically, but if you want to edit the flow-graph you'll have to arrange for
+  PYTHONPATH to contain $HOME/bin prior to launching GRC.
+  
+The starter script creates $HOME/meteor_data if it doesn't already exist, and that's where it puts
+  data files.  Several data files are produced as the program runs:
+  
+    met-daily?-YYYYMMDD.dat
+
+Where '?' is the channel number.  This contains a 24-hour low-time-resolution data log.
+
+Files produced from an event look like
+
+   met-det?-HHMM-YYYYMMDD.dat
+
+Where '?' is the channel number and 'HHMM' is the hours/minutes time at the time of the event.
+
+If you've enabled Baseband Recording, then there will be corresponding:
+
+   met-bb?-HHMM-YYYYMMDD.dat
+   
+Which correspond to the detector data files.  These are complex-baseband data, sampled at 2.5Ksps, using
+  the standard Gnu Radio complex-float raw binary format.
+  
+In operation you choose a center frequency, and then configure 3 channels that are within +/- 'samp-rate/2'
+  of the nominal center frequency.  The default sample rate is 1Msps.  For many observing situations
+  you only have 1 active channel, but for example, if you're observing FM, you may find that you can
+  find 3 "clear" channels within 1 or 2Mhz of each other.
+  
+The pre-detector bandwidth for each channel is configurable from 500Hz to 3KHz, and post-detector gain
+  is also configurable from 1 to 50.
+  
+Detection theshold may be configured on the main tab.  When the detection algorithm "triggers", it
+  dumps 60 seconds of "history" of the signal prior to the trigger point.  This helps produce a better
+  overall picture of the "shape" of an event.
+
+There are 3 "analyser" applications that come with this package:
+================================================================
+
+meteor_bb_analyser <filename>
+
+This application takes a met-bb?-HHMM-YYYMMDD.dat file, and produces a PNG image of a waterfall
+  spectrogram, showing the inner 250Hz of the captured baseband data.
+  
+meteor_det_analyser <filename>
+
+This application takes a met-det?-HHMM-YYYYMMDD.dat file or a met-daily?-YYMMDD.dat file and produces
+  a PNG image of a graph of detector power over time.
+  
+meteor_rate_analyser <filename>
+
+This application takes a met-daily?-YYYYMMDD.dat file and produces a graph showing estimate event rates
+  over time.
+  
+

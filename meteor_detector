@@ -1,0 +1,44 @@
+#!/bin/sh
+
+P=2.6
+python -V 2>tmp$$
+pv=`cat tmp$$|sed -e 's/Python  *//'`
+rm -f tmp$$
+
+case $pv in
+	2.6*)
+		P=2.6
+		;;
+	2.7*)
+		P=2.7
+		;;
+esac
+
+M=""
+
+if [ -f /etc/fedora-release ]
+then
+	if [ `uname -m` = x86_64 ]
+	then
+		M=64
+	fi
+fi
+
+PYTHONPATH=/usr/local/lib${M}/python${P}/site-packages
+PYTHONPATH=$PYTHONPATH:/usr/local/lib${M}/python${P}/dist-packages:$HOME/bin:.
+
+if [ ! -d $HOME/meteor_data ]
+then
+	mkdir $HOME/meteor_data
+fi
+
+cd $HOME/meteor_data
+
+for ch in 0 1 2
+do
+	rm -f met-bb-fifo$ch
+	mkfifo met-bb-fifo$ch
+done
+
+meteor_detector.py $@
+
